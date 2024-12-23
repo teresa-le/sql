@@ -53,9 +53,7 @@ The store wants to keep customer addresses. Propose two architectures for the CU
 
 **HINT:** search type 1 vs type 2 slowly changing dimensions. 
 
-```
-Your answer...
-```
+The difference between type 1 and type 2 architectures is that for type 1, changes to data are overwritten and historical changes aren't retained whereas for type 2, all data, including the historical changes, are retained. 
 
 ***
 
