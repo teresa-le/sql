@@ -202,10 +202,25 @@ When you have all of these components, you can run the update statement. */
 ALTER TABLE product_units
 ADD current_quantity INT;
 
-SELECT 
-    v.product_id,
-    SUM(v.product_quantity) OVER (PARTITION BY v.market_date ORDER BY v.market_date) AS running_total
-FROM product_units p
-INNER JOIN vendor_inventory v 
-    ON p.product_category_id = v.product_id;
+SELECT * 
+FROM product_units;
+
+WITH total_inventory_product AS (
+	SELECT DISTINCT 
+		v.market_date, 
+		v.product_id,
+		SUM(v.quantity) OVER (PARTITION BY v.product_id, v.market_date) AS running_total
+	FROM product_units p
+	INNER JOIN vendor_inventory v 
+		ON p.product_category_id = v.product_id
+	ORDER BY v.market_date DESC
+)
+
+SELECT MAX(market_date), 
+	   product_id, 
+	   running_total
+FROM total_inventory_product
+GROUP BY product_id;
+	
+
 
