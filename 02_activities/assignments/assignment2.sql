@@ -60,7 +60,8 @@ GROUP BY customer_id
 /* 3. Using a COUNT() window function, include a value along with each row of the 
 customer_purchases table that indicates how many different times that customer has purchased that product_id. */
 
-SELECT customer_id, 
+SELECT DISTINCT 
+	   customer_id, 
        product_id, 
        COUNT(product_id) OVER (PARTITION BY customer_id, product_id) AS times_purchased 
 FROM customer_purchases 
@@ -78,11 +79,16 @@ Remove any trailing or leading whitespaces. Don't just use a case statement for 
 
 Hint: you might need to use INSTR(product_name,'-') to find the hyphens. INSTR will help split the column. */
 
-
+SELECT product_name, 
+	   SUBSTR(product_name,NULLIF(INSTR(product_name, '-'), 0) +1) AS description
+FROM product;
 
 /* 2. Filter the query to show any product_size value that contain a number with REGEXP. */
 
-
+SELECT product_name, 
+	   SUBSTR(product_name,NULLIF(INSTR(product_name, '-'), 0) +1) AS description
+FROM product
+WHERE product_size REGEXP '[0-9]';
 
 -- UNION
 /* 1. Using a UNION, write a query that displays the market dates with the highest and lowest total sales.
