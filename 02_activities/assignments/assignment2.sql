@@ -198,29 +198,57 @@ Finally, make sure you have a WHERE statement to update the right row,
 	you'll need to use product_units.product_id to refer to the correct row within the product_units table. 
 When you have all of these components, you can run the update statement. */
 
-
+--- Update the product_units table to include a new column 
 ALTER TABLE product_units
 ADD current_quantity INT;
 
+--- View the results 
 SELECT * 
 FROM product_units;
 
-WITH total_inventory_product AS (
-	SELECT DISTINCT 
+/* Create a CTE to find the most recent quantity of a product using the most recent market date 
+   Query the CTE and se COALESCE to turn any NULL values into 0 
+*/
+WITH current_quantity_cte AS (
+SELECT MAX(market_date) AS most_recent_market_date, 
+	   product_id, 
+	   running_total
+FROM (SELECT DISTINCT 
 		v.market_date, 
 		v.product_id,
 		SUM(v.quantity) OVER (PARTITION BY v.product_id, v.market_date) AS running_total
-	FROM product_units p
-	INNER JOIN vendor_inventory v 
+	FROM vendor_inventory v
+	RIGHT JOIN product_units p
 		ON p.product_category_id = v.product_id
-	ORDER BY v.market_date DESC
+	ORDER BY v.market_date DESC) AS subquery 
+GROUP BY product_id
 )
 
-SELECT MAX(market_date), 
+SELECT COALESCE(most_recent_market_date, 0) AS most_recent_market_date,
+	   COALESCE(product_id, 0) AS product_id,
+	   COALESCE(running_total, 0) AS running_total
+FROM current_quantity_cte;
+
+/* Update the product_units table with the most recent quantity of products using the CTE */
+WITH current_quantity_cte AS (
+SELECT MAX(market_date) AS most_recent_market_date, 
 	   product_id, 
 	   running_total
-FROM total_inventory_product
-GROUP BY product_id;
-	
+FROM (SELECT DISTINCT 
+		v.market_date, 
+		v.product_id,
+		SUM(v.quantity) OVER (PARTITION BY v.product_id, v.market_date) AS running_total
+	FROM vendor_inventory v
+	RIGHT JOIN product_units p
+		ON p.product_category_id = v.product_id
+	ORDER BY v.market_date DESC) AS subquery 
+GROUP BY product_id)
 
+UPDATE product_units
+SET current_quantity = (SELECT running_total 
+					    FROM current_quantity_cte
+						WHERE product_units.product_id = current_quantity_cte.product_id); 
+
+SELECT * 
+FROM product_units;
 
