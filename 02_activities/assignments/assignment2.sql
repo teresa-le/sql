@@ -21,7 +21,7 @@ Edit the appropriate columns -- you're making two edits -- and the NULL rows wil
 All the other rows will remain the same.) */
 
 SELECT 
-COALESCE(product_name, ' ') || ', ' || COALESCE(product_size, ' ') || ' (' || COALESCE(product_qty_type, 'unit') || ')'
+	COALESCE(product_name, ' ') || ', ' || COALESCE(product_size, ' ') || ' (' || COALESCE(product_qty_type, 'unit') || ')'
 FROM product
 
 
@@ -36,9 +36,9 @@ each new market date for each customer, or select only the unique market dates p
 HINT: One of these approaches uses ROW_NUMBER() and one uses DENSE_RANK(). */
 
 SELECT DISTINCT 
-    market_date, 
-    customer_id, 
-    DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY market_date) AS visit_number
+    	market_date, 
+    	customer_id, 
+    	DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY market_date) AS visit_number
 FROM customer_purchases;
 
 
@@ -47,8 +47,8 @@ then write another query that uses this one as a subquery (or temp table) and fi
 only the customer’s most recent visit. */
 
 SELECT MAX(market_date), 
-	   customer_id,
-	   visit_number 
+       customer_id,
+       visit_number 
 FROM 
 	(SELECT DISTINCT 
 		market_date, 
@@ -61,7 +61,7 @@ GROUP BY customer_id
 customer_purchases table that indicates how many different times that customer has purchased that product_id. */
 
 SELECT DISTINCT 
-	   customer_id, 
+       customer_id, 
        product_id, 
        COUNT(product_id) OVER (PARTITION BY customer_id, product_id) AS times_purchased 
 FROM customer_purchases 
@@ -80,13 +80,13 @@ Remove any trailing or leading whitespaces. Don't just use a case statement for 
 Hint: you might need to use INSTR(product_name,'-') to find the hyphens. INSTR will help split the column. */
 
 SELECT product_name, 
-	   SUBSTR(product_name,NULLIF(INSTR(product_name, '-'), 0) +1) AS description
+       SUBSTR(product_name,NULLIF(INSTR(product_name, '-'), 0) +1) AS description
 FROM product;
 
 /* 2. Filter the query to show any product_size value that contain a number with REGEXP. */
 
 SELECT product_name, 
-	   SUBSTR(product_name,NULLIF(INSTR(product_name, '-'), 0) +1) AS description
+       SUBSTR(product_name,NULLIF(INSTR(product_name, '-'), 0) +1) AS description
 FROM product
 WHERE product_size REGEXP '[0-9]';
 
@@ -102,13 +102,13 @@ with a UNION binding them. */
 
 WITH market_date_sales AS 
 	(SELECT market_date,
-		   SUM(cost_to_customer_per_qty * quantity) as sales 
+		SUM(cost_to_customer_per_qty * quantity) as sales 
 	FROM customer_purchases 
 	GROUP BY market_date
 	ORDER BY sales)
 	
 SELECT max(sales),
-	   market_date
+       market_date
 FROM market_date_sales
 UNION  
 SELECT min(sales),
@@ -211,8 +211,8 @@ FROM product_units;
 */
 WITH current_quantity_cte AS (
 SELECT MAX(market_date) AS most_recent_market_date, 
-	   product_id, 
-	   running_total
+       product_id, 
+       running_total
 FROM (SELECT DISTINCT 
 		v.market_date, 
 		v.product_id,
@@ -225,15 +225,15 @@ GROUP BY product_id
 )
 
 SELECT COALESCE(most_recent_market_date, 0) AS most_recent_market_date,
-	   COALESCE(product_id, 0) AS product_id,
-	   COALESCE(running_total, 0) AS running_total
+       COALESCE(product_id, 0) AS product_id,
+       COALESCE(running_total, 0) AS running_total
 FROM current_quantity_cte;
 
 /* Update the product_units table with the most recent quantity of products using the CTE */
 WITH current_quantity_cte AS (
 SELECT MAX(market_date) AS most_recent_market_date, 
-	   product_id, 
-	   running_total
+       product_id, 
+       running_total
 FROM (SELECT DISTINCT 
 		v.market_date, 
 		v.product_id,
